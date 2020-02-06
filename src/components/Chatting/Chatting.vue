@@ -2,24 +2,24 @@
 
   <transition name="slide-left">
     <div class="chatting">
-
       <!-- 聊天界面头部 -->
       <div class="chatting-header">
-
-        <div class="chatting-back">
-          <i @click="$router.push('/AI')" :class="[isRedAI ? 'icon-back' : 'icon-back2']"></i>
-        </div>
-        <div class="chatting-title">
-          <h2><i class="icon-group"></i>群聊</h2>
-        </div>
         <div class="chatting-menu">
-          <i @click="$router.push('/')" class="icon-menu"></i>
+          <i @click="$router.push('/')" class="icon-concle"></i>
+        </div>
+        
+        <div class="chatting-title">
+          华为商城客服小艺
+        </div>
+        <div class="chatting-more">
+          <i @click="$router.push('/')" class="icon-more"></i>
         </div>
 
       </div>
 
       <!-- 聊天内容区域 -->
       <div @click.stop.prevent="isShowEmoji=false" ref="chattingContent" class="chatting-content">
+        <LinkItem></LinkItem>
 
         <div v-for="item of msgs">
           <div v-if="item.self" class="chatting-item self clearfix">
@@ -27,23 +27,23 @@
               {{ item.date }}
             </div>
             <div class="msg-from">
-              <span class="loc">[{{item.loc}}]</span>
+              <!-- <span class="loc">[{{item.loc}}]</span> -->
               <span class="msg-author">{{ item.from}}</span>
-              <img :src="item.avatarUrl" alt="">
+              <img src="./../../common/icons/portrait.svg" alt="">
             </div>
-            <div class="msg-content">{{ item.content }}</div>
+            <div class="msg-content" v-html="item.content"></div>
           </div>
 
           <div v-else class="chatting-item other clearfix">
-            <div class="msg-date">
+            <!-- <div class="msg-date">
               {{ item.date }}
-            </div>
+            </div> -->
             <div class="msg-from">
-              <img :src="item.avatarUrl" alt="">
-              <span class="loc">[{{item.loc}}]</span>
+              <img src="./../../common/icons/server-portrait.svg" alt="">
+              <!-- <span class="loc">[{{item.loc}}]</span> -->
               <span class="msg-author">{{ item.from }}</span>
             </div>
-            <div class="msg-content">{{ item.content }}</div>
+            <div class="msg-content" v-html="item.content"></div>
           </div>
 
         </div>
@@ -56,7 +56,6 @@
 
       <!-- 输入区域 -->
       <div class="chatting-input">
-
         <transition name="slide-bottom">
           <div v-show="isShowEmoji" class="emoji-display">
             <ul>
@@ -64,13 +63,14 @@
             </ul>
           </div>
         </transition>
-
-
-        <div class="emoji">
+        <!-- <div class="emoji">
           <i @click="showEmoji(isShowEmoji=!isShowEmoji);" class="icon-emoji"></i>
+        </div> -->
+        <textarea @keyup.enter="send" @input="newLine" ref="textarea" v-model.trim="inputContent" placeholder="请输入您要咨询的问题"></textarea>
+        <div class="send-wrap" @click="send">
+        
+          <i :class="active ?'icon-send-active' : 'icon-send'"></i>
         </div>
-        <textarea @keyup.enter="send" @input="newLine" ref="textarea" v-model.trim="inputContent" placeholder="左上角还有智能机器人哦"></textarea>
-        <button @click="send">发送</button>
       </div>
 
     </div>
@@ -79,6 +79,9 @@
 </template>
 
 <script>
+import LinkItem from './../LinkItem';
+import Qa from './Qa';
+
 export default {
   name: 'chatting',
   data() {
@@ -91,13 +94,21 @@ export default {
       oTextarea: {},
       emojis: ['😂', '🙏', '😄', '😏', '😇', '😅', '😌', '😘', '😍', '🤓', '😜', '😎', '😊', '😳', '🙄', '😱', '😒', '😔', '😷', '👿', '🤗', '😩', '😤', '😣', '😰', '😴', '😬', '😭', '👻', '👍', '✌️', '👉', '👀', '🐶', '🐷', '😹', '⚡️', '🔥', '🌈', '🍏', '⚽️', '❤️', '🇨🇳'],
       isShowEmoji: false,
-      isRedAI: false
+      isRedAI: false,
+      active: false,
+      qa:[],
     }
+  },
+  components: {
+    LinkItem,
   },
   watch: {
     msgs(val) {
       localStorage.msgs_group = JSON.stringify(val);
-    }
+    },
+    inputContent(val) {
+      this.active = !!val;
+    },
   },
   computed: {
     name() {
@@ -114,7 +125,22 @@ export default {
       next();
     }
   },
+  created() {
+    this.qa = Qa;
+  },
   mounted() {
+    const link = this.qa.map((item)=>{ return `<a href=\"http://localhost:8080/#/qa?id=${item.number}\" target=\"_blank\">${item.number}、${item.q}</a><br />`}).join('');
+    const linkContent= "<div>尊敬的用户，智能客服小艺很高兴为您服务，为配合新型肺炎的防疫工作，在线人工服务时间调整至9点至21点，建议您优先通过智能客服尝试自助解决问题<br />"+link+"</div>";
+    this.msgs.push({
+      date: this.moment().format('YYYY-MM-DD HH:mm:ss'),
+      loc: localStorage.addr,
+      from: '客服小姐姐',
+      content: linkContent,
+      // content: "<div>尊敬的用户，智能客服小艺很高兴为您服务，为配合新型肺炎的防疫工作，在线人工服务时间调整至9点至21点，建议您优先通过智能客服尝试自助解决问题<br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">1、中药汤剂应该怎么保存？可以保存多长时间？</a><br /><a href=\"http://localhost:8080/#/qa?id=2\" target=\"_blank\">2、儿童方有适用年龄和服用注意事项吗？</a><br /><a href=\"http://localhost:8080/#/qa?id=3\" target=\"_blank\">3、省外可以配送吗？是包邮的吗？多久可以送达？</a><br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">4、该新冠肺炎预防方6剂可以服用多少天？</a><br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">5、新冠肺炎预防方怎么服用效果最佳？</a><br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">6、服药期间，饮食需要忌口吗？</a><br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">7、如何查询我的订单？</a><br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">8、直接给我药液，我怎么知道你到底是用什么药材煎的啊？</a><br /><a href=\"http://localhost:8080/#/qa?id=1\" target=\"_blank\">9、这种塑料材料在高温下不会产生有害物质吗？</a></div>",
+      self: false,
+      avatarUrl: this.avatarUrl
+    });
+
     setInterval(() => this.isRedAI = !this.isRedAI, 2500);
 
     this.oContent = document.querySelector('.chatting-content');
@@ -155,18 +181,31 @@ export default {
         socket.emit('sendGroupMsg', {
           date: this.moment().format('YYYY-MM-DD HH:mm:ss'),
           loc: localStorage.addr,
-          from: `${localStorage.name}`,
+          from: `${localStorage.name}||''`,
           content: this.inputContent,
           avatarUrl: this.avatarUrl
         });
         this.msgs.push({
           date: this.moment().format('YYYY-MM-DD HH:mm:ss'),
           loc: localStorage.addr,
-          from: `${localStorage.name}`,
+          from: `${localStorage.name}||'您'`,
           content: this.inputContent,
           self: true,
           avatarUrl: this.avatarUrl
         });
+        this.qa.map((item) => {
+          if(item.q === this.inputContent) {
+            this.msgs.push({
+              date: this.moment().format('YYYY-MM-DD HH:mm:ss'),
+              loc: localStorage.addr,
+              from: '客服小姐姐',
+              content: item.a,
+              self: false,
+              avatarUrl: this.avatarUrl
+            });
+          }
+        });
+        
         this.inputContent = '';
         setTimeout(() => this.oContent.scrollTop = this.oContent.scrollHeight, 0);
       };
@@ -222,22 +261,18 @@ export default {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 50px;
+      height: 40px;
       width: 100%;
-      background-color: $blue;
-      color: white;
+      background-color: #fff;
+      color: #262626;
       padding-left: 10px;
       padding-right: 15px;
 
-      .chatting-back {
-        width: 32px;
-        height: 32px;
-        .icon-back {
-          background: url('../../common/icons/icon-ai.svg') no-repeat;
-          background-size: contain;
-        }
-        .icon-back2 {
-          background: url('../../common/icons/icon-ai2.svg') no-repeat;
+      .chatting-more {
+        .icon-more {
+          width: 20px;
+          height: 20px;
+          background: url('../../common/icons/icon-more.svg') no-repeat;
           background-size: contain;
         }
       }
@@ -245,8 +280,8 @@ export default {
       .chatting-title {
         i.icon-group {
           vertical-align: top;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: url('../../common/icons/icon-group.svg') no-repeat;
           background-size: contain;
           margin-right: 3px;
@@ -254,10 +289,10 @@ export default {
       }
 
       .chatting-menu {
-        width: 30px;
-        height: 30px;
-        i.icon-menu {
-          background: url('../../common/icons/icon-index.svg') no-repeat;
+        i.icon-concle {
+          width: 20px;
+          height: 20px;
+          background: url('../../common/icons/icon-concle.svg') no-repeat;
           background-size: contain;
         }
       }
@@ -285,7 +320,7 @@ export default {
             margin-right: 5px;
           }
           .msg-author {
-            font-size: 1.2rem;
+            font-size: 0.8rem;
           }
           img {
             width: 30px;
@@ -296,9 +331,13 @@ export default {
         .msg-content {
           margin-top: 5px;
           background-color: white;
-          width: 200px;
+          max-width: 250px;
           padding: 6px 10px;
           border-radius: 10px;
+          font-size: 0.8rem;
+          /deep/ a {
+            color: #2196f3;
+          }
         }
       }
 
@@ -366,6 +405,25 @@ export default {
       display: flex;
       height: 40px;
       width: 100%;
+      .send-wrap {
+        width: 50px;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        i.icon-send {
+          width: 25px;
+          height: 25px;
+          background: url('../../common/icons/icon-send.svg') no-repeat;
+          background-size: contain;
+        } 
+        i.icon-send-active {
+          width: 25px;
+          height: 25px;
+          background: url('../../common/icons/icon-send-active.svg') no-repeat;
+          background-size: contain;
+        } 
+      }
       .emoji-display {
         position: absolute;
         width: 100%;
@@ -403,11 +461,19 @@ export default {
       textarea {
         flex: 1;
         resize: none;
-        padding-left: 3px;
-        padding-top: 7px;
+        border: 1px solid #d2d2d2;
+        padding-left: 18px;
+        padding-top: 5px;
         padding-right: 3px;
         height: 100%;
-        font-size: 1.4rem;
+        font-size: 0.8rem;
+        margin: 5px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        // color: #d2d2d2;
       }
       button {
         width: 60px;

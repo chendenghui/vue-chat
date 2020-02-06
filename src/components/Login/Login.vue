@@ -8,21 +8,16 @@
       <h2>请输入您的名字</h2>
       <input @keyup.enter="login" v-model.trim="name" type="text" autofocus>
 
-      <transition name="showAbout">
-        <About v-if="isShowAbout"></About>
-      </transition>
 
     </div>
   </transition>
 </template>
 
 <script>
-import About from '../About/About.vue';
 
 export default {
   name: 'login',
   components: {
-    About
   },
   data() {
     return {
