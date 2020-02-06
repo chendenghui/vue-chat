@@ -2,7 +2,6 @@
   "name": "vue-chat",
   "version": "1.0.0",
   "description": "A Vue.js project",
-  "author": "Zhaohui <zhaohui@microzz.com>",
   "private": true,
   "scripts": {
     "dev": "node build/dev-server.js",
